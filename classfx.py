@@ -241,5 +241,40 @@ class AnimatedGradient:
         if self.anim.finished:
             self.anim.reset()
 
+class ControlPanel:
+    def __init__(self, x, y, width, height, title="Menu"):
+        self.x, self.y = x, y
+        self.width, self.height = width, height
+        self.title = title
+        self.components = [] 
+        self.bg_color = 0xD3D3D3 # Light gray panel background
+
+    def add(self, component):
+        """Adds a UI element (Button, Slider, etc.) to the panel."""
+        self.components.append(component)
+
+    def draw(self):
+        """Draws the panel container and automatically renders all child components."""
+        import gint
+        # Draw the main panel box
+        gint.drect(self.x, self.y, self.x + self.width, self.y + self.height, self.bg_color)
+        gint.drect_border(self.x, self.y, self.x + self.width, self.y + self.height, gint.C_NONE, 1, gint.C_BLACK)
+        # Draw the panel title text
+        gint.dtext(self.x + 5, self.y + 5, gint.C_BLACK, self.title)
+        
+        # Tell every single component inside to draw itself
+        for comp in self.components:
+            comp.draw()
+
+    def handle_event(self, tx, ty):
+        """Routes touch coordinates to the correct component inside the panel."""
+        for comp in self.components:
+            # Check if the component has an active hit-box and was clicked
+            if hasattr(comp, 'is_clicked') and comp.is_clicked(tx, ty):
+                return comp
+            if hasattr(comp, 'update') and comp.update(tx, ty):
+                return comp
+        return None
+
     def get(self, name):
         return hex_to_gint(self.colors.get(name.lower(), 0xFFFFFF))
